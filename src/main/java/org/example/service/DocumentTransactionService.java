@@ -30,19 +30,8 @@ public class DocumentTransactionService {
         documentRepository.saveUserComplicate(userComplicate);
         documentRepository.saveDocumentTransactionEntity(documentTransactionEntity);
 
-        try (FileWriter fileWriter = new FileWriter("user_complicate.json")) {
-            fileWriter.write(jsonStringOfUserComplicate);
-            logger.info("JSON string has been saved to user_data.json");
-        } catch (IOException e) {
-            logger.error("Error writing JSON to file: " + e.getMessage());
-        }
-
-        try (FileWriter fileWriter = new FileWriter("document_transaction.json")) {
-            fileWriter.write(jsonStringOfDocumentTransactionEntity);
-            logger.info("JSON string has been saved to user_data.json");
-        } catch (IOException e) {
-            logger.error("Error writing JSON to file: " + e.getMessage());
-        }
+        writeFileAsJson("user_complicate.json", jsonStringOfUserComplicate);
+        writeFileAsJson("document_transaction.json", jsonStringOfDocumentTransactionEntity);
 
         ArrayList<String> sourceFileList = new ArrayList<>();
         sourceFileList.add("user_complicate.json");
@@ -72,6 +61,15 @@ public class DocumentTransactionService {
         );
 
         ftpService.terminateConnection();
+    }
+
+    private static void writeFileAsJson(String fileName, String jsonString) {
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
+            fileWriter.write(jsonString);
+            logger.info("JSON string has been saved to user_data.json");
+        } catch (IOException e) {
+            logger.error("Error writing JSON to file: " + e.getMessage());
+        }
     }
 
     private static UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
