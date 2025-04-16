@@ -19,37 +19,7 @@ public class DocumentTransactionService {
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
 
         Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
-        UserComplicate userComplicate;
-        if (maybeUserLegacy.isPresent()) {
-            UserLegacy userLegacy = maybeUserLegacy.get();
-            UserSimple userSimple = new UserSimple(
-                    userLegacy.name,
-                    userLegacy.email,
-                    userLegacy.age,
-                    userLegacy.isDeveloper);
-            userComplicate = new UserComplicate(
-                    userSimple,
-                    "f1",
-                    "f2",
-                    "f3",
-                    "f4",
-                    "f5");
-
-        } else {
-            UserSimple userSimple = new UserSimple(
-                    "New",
-                    "new@customer",
-                    22,
-                    false
-            );
-            userComplicate = new UserComplicate(
-                    userSimple,
-                    "ff1",
-                    "ff2",
-                    "ff3",
-                    "ff4",
-                    "ff5");
-        }
+        UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
 
         //cases.stream().filter()
 
@@ -126,5 +96,40 @@ public class DocumentTransactionService {
         );
 
         ftpService.terminateConnection();
+    }
+
+    private static UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
+        UserComplicate userComplicate;
+        if (maybeUserLegacy.isPresent()) {
+            UserLegacy userLegacy = maybeUserLegacy.get();
+            UserSimple userSimple = new UserSimple(
+                    userLegacy.name,
+                    userLegacy.email,
+                    userLegacy.age,
+                    userLegacy.isDeveloper);
+            userComplicate = new UserComplicate(
+                    userSimple,
+                    "f1",
+                    "f2",
+                    "f3",
+                    "f4",
+                    "f5");
+
+        } else {
+            UserSimple userSimple = new UserSimple(
+                    "New",
+                    "new@customer",
+                    22,
+                    false
+            );
+            userComplicate = new UserComplicate(
+                    userSimple,
+                    "ff1",
+                    "ff2",
+                    "ff3",
+                    "ff4",
+                    "ff5");
+        }
+        return userComplicate;
     }
 }
