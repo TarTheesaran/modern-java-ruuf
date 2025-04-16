@@ -21,8 +21,6 @@ public class DocumentTransactionService {
         Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
         UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
 
-        //cases.stream().filter()
-
         DocumentTransactionEntity documentTransactionEntity = new DocumentTransactionEntity();
         documentTransactionEntity.setCaseNo(userComplicate.userSimple.name + "-" + userComplicate.userSimple.email);
         documentTransactionEntity.setCreatedBy(userComplicate.userSimple.name);
@@ -74,9 +72,7 @@ public class DocumentTransactionService {
                 2121,
                 "one",
                 "1234");
-
-        // Specify the file to upload
-        String localFile = "user_data.json"; // Path to local file
+        
         LocalDateTime currentDateTime = LocalDateTime.now();
         // Define the formatter with the desired pattern
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
