@@ -14,6 +14,7 @@ import java.util.*;
 
 public class DocumentTransactionService {
     private static final Logger logger = LoggerFactory.getLogger(DocumentTransactionService.class);
+
     public void uploadDocumentTransaction() {
         DocumentRepository documentRepository = new DocumentRepository();
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
@@ -42,16 +43,10 @@ public class DocumentTransactionService {
                 "one",
                 "1234");
 
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        // Define the formatter with the desired pattern
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
+        String directoryName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        ftpService.checkIfDirectoryIsAlreadyExist(directoryName)
+                .ifPresent(result -> ftpService.createDirectory(directoryName));
 
-        // Format the date-time into the desired string format
-        String directoryName = currentDateTime.format(formatter);
-        Optional<Boolean> directoryNotExist = ftpService.checkIfDirectoryIsAlreadyExist(directoryName);
-        directoryNotExist.ifPresent(
-                result -> ftpService.createDirectory(directoryName)
-        );
         sourceFileList.forEach(fileName ->
                 ftpService.uploadFile(directoryName, fileName)
                         .ifPresentOrElse(
