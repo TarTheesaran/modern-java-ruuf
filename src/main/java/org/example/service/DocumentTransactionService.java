@@ -21,27 +21,7 @@ public class DocumentTransactionService {
         Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
         UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
 
-        DocumentTransactionEntity documentTransactionEntity = new DocumentTransactionEntity();
-        documentTransactionEntity.setCaseNo(userComplicate.userSimple.name + "-" + userComplicate.userSimple.email);
-        documentTransactionEntity.setCreatedBy(userComplicate.userSimple.name);
-        documentTransactionEntity.setTotalDocument(3);
-        documentTransactionEntity.setCreatedDate(new Date());
-
-        if (!requestCases.isEmpty()) {
-            Optional<RequestCase> case005 = requestCases.stream()
-                    .filter(requestCase -> requestCase.getCaseNo().equals("CASE005"))
-                    .findFirst();
-            case005.ifPresentOrElse(
-                    c5 -> documentTransactionEntity.setDestinationCompanyCode(c5.getDestinationCompanyCode()),
-                    () -> documentTransactionEntity.setDestinationCompanyCode("COMP001")
-            );
-        } else {
-            documentTransactionEntity.setDestinationCompanyCode("COMP002");
-
-        }
-        documentTransactionEntity.setDocStatus("status1");
-        documentTransactionEntity.setDocClass("CASE003");
-        documentTransactionEntity.setHireeNo("hireNo");
+        DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
 
         Gson gson = new Gson();
         String jsonStringOfUserComplicate = gson.toJson(userComplicate);
@@ -72,7 +52,7 @@ public class DocumentTransactionService {
                 2121,
                 "one",
                 "1234");
-        
+
         LocalDateTime currentDateTime = LocalDateTime.now();
         // Define the formatter with the desired pattern
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -127,5 +107,30 @@ public class DocumentTransactionService {
                     "ff5");
         }
         return userComplicate;
+    }
+
+    private static DocumentTransactionEntity createDocumentTransaction(UserComplicate userComplicate, List<RequestCase> requestCases) {
+        DocumentTransactionEntity documentTransactionEntity = new DocumentTransactionEntity();
+        documentTransactionEntity.setCaseNo(userComplicate.userSimple.name + "-" + userComplicate.userSimple.email);
+        documentTransactionEntity.setCreatedBy(userComplicate.userSimple.name);
+        documentTransactionEntity.setTotalDocument(3);
+        documentTransactionEntity.setCreatedDate(new Date());
+
+        if (!requestCases.isEmpty()) {
+            Optional<RequestCase> case005 = requestCases.stream()
+                    .filter(requestCase -> requestCase.getCaseNo().equals("CASE005"))
+                    .findFirst();
+            case005.ifPresentOrElse(
+                    c5 -> documentTransactionEntity.setDestinationCompanyCode(c5.getDestinationCompanyCode()),
+                    () -> documentTransactionEntity.setDestinationCompanyCode("COMP001")
+            );
+        } else {
+            documentTransactionEntity.setDestinationCompanyCode("COMP002");
+
+        }
+        documentTransactionEntity.setDocStatus("status1");
+        documentTransactionEntity.setDocClass("CASE003");
+        documentTransactionEntity.setHireeNo("hireNo");
+        return documentTransactionEntity;
     }
 }
