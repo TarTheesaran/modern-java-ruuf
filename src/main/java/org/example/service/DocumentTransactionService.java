@@ -16,8 +16,7 @@ public class DocumentTransactionService {
     private static final Logger logger = LoggerFactory.getLogger(DocumentTransactionService.class);
     public void uploadDocumentTransaction() {
         DocumentRepository documentRepository = new DocumentRepository();
-        Optional<List<RequestCase>> cases = documentRepository.getAllRequestCase();
-        List<RequestCase> requestCases = cases.orElse(Collections.emptyList());
+        List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
 
         Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
         UserComplicate userComplicate;
