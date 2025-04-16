@@ -20,25 +20,24 @@ public class DocumentTransactionService {
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
 
         Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
+
         UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
-
         DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
-
-        Gson gson = new Gson();
-        String jsonStringOfUserComplicate = gson.toJson(userComplicate);
-        String jsonStringOfDocumentTransactionEntity = gson.toJson(documentTransactionEntity);
 
         documentRepository.saveUserComplicate(userComplicate);
         documentRepository.saveDocumentTransactionEntity(documentTransactionEntity);
 
-        writeFileAsJson("user_complicate.json", jsonStringOfUserComplicate);
-        writeFileAsJson("document_transaction.json", jsonStringOfDocumentTransactionEntity);
+        Gson gson = new Gson();
+        Map<String, String> sourceFileList = Map.of(
+                "user_complicate.json", gson.toJson(userComplicate),
+                "document_transaction.json", gson.toJson(documentTransactionEntity)
+        );
 
-        ArrayList<String> sourceFileList = new ArrayList<>();
-        sourceFileList.add("user_complicate.json");
-        sourceFileList.add("document_transaction.json");
+        sourceFileList.forEach((fileName, jsonString) ->
+                writeFileAsJson(fileName, jsonString)
+        );
 
-        uploadFilesToFtp(sourceFileList);
+        uploadFilesToFtp(new ArrayList<>(sourceFileList.keySet().stream().toList()));
     }
 
     private static UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
@@ -110,7 +109,7 @@ public class DocumentTransactionService {
         }
     }
 
-    private static void uploadFilesToFtp(ArrayList<String> sourceFileList) {
+    private static void uploadFilesToFtp(ArrayList<String> fileNameList) {
         FtpService ftpService = new FtpService("localhost",
                 2121,
                 "one",
@@ -120,7 +119,7 @@ public class DocumentTransactionService {
         ftpService.checkIfDirectoryIsAlreadyExist(directoryName)
                 .ifPresent(result -> ftpService.createDirectory(directoryName));
 
-        sourceFileList.forEach(fileName ->
+        fileNameList.forEach(fileName ->
                 ftpService.uploadFile(directoryName, fileName)
                         .ifPresentOrElse(
                                 result -> logger.info("Upload successfully"),
