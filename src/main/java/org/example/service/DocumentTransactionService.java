@@ -38,33 +38,7 @@ public class DocumentTransactionService {
         sourceFileList.add("user_complicate.json");
         sourceFileList.add("document_transaction.json");
 
-        FtpService ftpService = new FtpService("localhost",
-                2121,
-                "one",
-                "1234");
-
-        String directoryName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        ftpService.checkIfDirectoryIsAlreadyExist(directoryName)
-                .ifPresent(result -> ftpService.createDirectory(directoryName));
-
-        sourceFileList.forEach(fileName ->
-                ftpService.uploadFile(directoryName, fileName)
-                        .ifPresentOrElse(
-                                result -> logger.info("Upload successfully"),
-                                () -> logger.error("Upload failed for some reasons")
-                        )
-        );
-
-        ftpService.terminateConnection();
-    }
-
-    private static void writeFileAsJson(String fileName, String jsonString) {
-        try (FileWriter fileWriter = new FileWriter(fileName)) {
-            fileWriter.write(jsonString);
-            logger.info("JSON string has been saved to user_data.json");
-        } catch (IOException e) {
-            logger.error("Error writing JSON to file: " + e.getMessage());
-        }
+        uploadFilesToFtp(sourceFileList);
     }
 
     private static UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
@@ -125,5 +99,35 @@ public class DocumentTransactionService {
         documentTransactionEntity.setDocClass("CASE003");
         documentTransactionEntity.setHireeNo("hireNo");
         return documentTransactionEntity;
+    }
+
+    private static void writeFileAsJson(String fileName, String jsonString) {
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
+            fileWriter.write(jsonString);
+            logger.info("JSON string has been saved to user_data.json");
+        } catch (IOException e) {
+            logger.error("Error writing JSON to file: " + e.getMessage());
+        }
+    }
+
+    private static void uploadFilesToFtp(ArrayList<String> sourceFileList) {
+        FtpService ftpService = new FtpService("localhost",
+                2121,
+                "one",
+                "1234");
+
+        String directoryName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        ftpService.checkIfDirectoryIsAlreadyExist(directoryName)
+                .ifPresent(result -> ftpService.createDirectory(directoryName));
+
+        sourceFileList.forEach(fileName ->
+                ftpService.uploadFile(directoryName, fileName)
+                        .ifPresentOrElse(
+                                result -> logger.info("Upload successfully"),
+                                () -> logger.error("Upload failed for some reasons")
+                        )
+        );
+
+        ftpService.terminateConnection();
     }
 }
