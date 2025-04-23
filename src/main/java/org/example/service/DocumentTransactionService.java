@@ -3,6 +3,7 @@ package org.example.service;
 import com.google.gson.Gson;
 import org.example.entity.*;
 import org.example.repository.DocumentRepository;
+import org.example.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,13 +22,14 @@ public class DocumentTransactionService {
 
     public void uploadDocumentTransaction() {
         DocumentRepository documentRepository = new DocumentRepository();
+        UserRepository userRepository = new UserRepository();
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
-        Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById(USER_ID);
+        Optional<UserLegacy> maybeUserLegacy = userRepository.getUserLegacyById(USER_ID);
 
         UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
         DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
 
-        documentRepository.saveUserComplicate(userComplicate);
+        userRepository.saveUserComplicate(userComplicate);
         documentRepository.saveDocumentTransactionEntity(documentTransactionEntity);
 
         Gson gson = new Gson();
