@@ -1,16 +1,15 @@
 package org.example.repository;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.example.entity.*;
 import redis.clients.jedis.UnifiedJedis;
-import java.lang.reflect.Type;
-import java.util.List;
+
 import java.util.Optional;
 
 
 public class UserRepository {
     UnifiedJedis jedis;
+
     public UserRepository() {
         jedis = new UnifiedJedis("redis://localhost:6379");
         String simple = "{\"name\":\"Jordan\",\"email\":\"norman@futurestud.io\",\"age\":26,\"isDeveloper\":true}";
@@ -29,9 +28,9 @@ public class UserRepository {
         jedis.set("complicate@sample.com", complicate);
     }
 
-    public Optional<UserSimple> getUserSimpleById(String id){
+    public Optional<UserSimple> getUserSimpleById(String id) {
         String userJson = jedis.get(id);
-        if(userJson == null) return Optional.empty();
+        if (userJson == null) return Optional.empty();
         Gson gson = new Gson();
         UserSimple userObject = gson.fromJson(userJson, UserSimple.class);
         return Optional.of(userObject);
@@ -42,9 +41,9 @@ public class UserRepository {
         return Optional.of(true);
     }
 
-    public Optional<UserLegacy> getUserLegacyById(String id){
+    public Optional<UserLegacy> getUserLegacyById(String id) {
         String userJson = jedis.get(id);
-        if(userJson == null) return Optional.empty();
+        if (userJson == null) return Optional.empty();
         Gson gson = new Gson();
         UserLegacy userLegacy = gson.fromJson(userJson, UserLegacy.class);
         return Optional.of(userLegacy);
@@ -55,5 +54,40 @@ public class UserRepository {
         String jsonString = gson.toJson(userComplicate);
         jedis.set(userComplicate.userSimple.email, jsonString);
         return Optional.of(true);
+    }
+
+    public UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
+        UserComplicate userComplicate;
+        if (maybeUserLegacy.isPresent()) {
+            UserLegacy userLegacy = maybeUserLegacy.get();
+            UserSimple userSimple = new UserSimple(
+                    userLegacy.name,
+                    userLegacy.email,
+                    userLegacy.age,
+                    userLegacy.isDeveloper);
+            userComplicate = new UserComplicate(
+                    userSimple,
+                    "f1",
+                    "f2",
+                    "f3",
+                    "f4",
+                    "f5");
+
+        } else {
+            UserSimple userSimple = new UserSimple(
+                    "New",
+                    "new@customer",
+                    22,
+                    false
+            );
+            userComplicate = new UserComplicate(
+                    userSimple,
+                    "ff1",
+                    "ff2",
+                    "ff3",
+                    "ff4",
+                    "ff5");
+        }
+        return userComplicate;
     }
 }

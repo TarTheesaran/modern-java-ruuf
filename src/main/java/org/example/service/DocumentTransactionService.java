@@ -26,7 +26,7 @@ public class DocumentTransactionService {
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
         Optional<UserLegacy> maybeUserLegacy = userRepository.getUserLegacyById(USER_ID);
 
-        UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
+        UserComplicate userComplicate = userRepository.getUserComplicate(maybeUserLegacy);
         DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
 
         userRepository.saveUserComplicate(userComplicate);
@@ -41,41 +41,6 @@ public class DocumentTransactionService {
         sourceFileList.forEach((fileName, jsonString) -> writeFileAsJson(fileName, jsonString));
 
         uploadFilesToFtp(new ArrayList<>(sourceFileList.keySet().stream().toList()));
-    }
-
-    private static UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
-        UserComplicate userComplicate;
-        if (maybeUserLegacy.isPresent()) {
-            UserLegacy userLegacy = maybeUserLegacy.get();
-            UserSimple userSimple = new UserSimple(
-                    userLegacy.name,
-                    userLegacy.email,
-                    userLegacy.age,
-                    userLegacy.isDeveloper);
-            userComplicate = new UserComplicate(
-                    userSimple,
-                    "f1",
-                    "f2",
-                    "f3",
-                    "f4",
-                    "f5");
-
-        } else {
-            UserSimple userSimple = new UserSimple(
-                    "New",
-                    "new@customer",
-                    22,
-                    false
-            );
-            userComplicate = new UserComplicate(
-                    userSimple,
-                    "ff1",
-                    "ff2",
-                    "ff3",
-                    "ff4",
-                    "ff5");
-        }
-        return userComplicate;
     }
 
     private static DocumentTransactionEntity createDocumentTransaction(UserComplicate userComplicate, List<RequestCase> requestCases) {
@@ -113,10 +78,7 @@ public class DocumentTransactionService {
     }
 
     private static void uploadFilesToFtp(ArrayList<String> fileNameList) {
-        FtpService ftpService = new FtpService("localhost",
-                2121,
-                "one",
-                "1234");
+        FtpService ftpService = new FtpService();
 
         String directoryName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         ftpService.checkIfDirectoryIsAlreadyExist(directoryName)
