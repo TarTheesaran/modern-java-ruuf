@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class FtpService {
@@ -16,6 +18,7 @@ public class FtpService {
     private static final int PORT = 2121;
     private static final String USERNAME = "one";
     private static final String PASSWORD = "1234";
+    private static final String DATE_FORMAT = "yyyyMMddHHmmss";
 
     private static final Logger logger = LoggerFactory.getLogger(FtpService.class);
     private final FTPClient ftpClient;
@@ -91,11 +94,10 @@ public class FtpService {
     }
 
     public Optional<Boolean> uploadFile(String directory, String localFile) {
-        String timeStamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
+        String timeStamp = new SimpleDateFormat(DATE_FORMAT).format(new Date());
         String remoteFile = "remote_file_"+localFile.replace(".json", "")+"_"+ timeStamp + ".txt";
         try {
             if (!Objects.equals(directory, "")) ftpClient.changeWorkingDirectory(directory);
-            //System.out.println(directory);
         }catch(IOException e) {
             return Optional.empty();
         }
@@ -107,6 +109,19 @@ public class FtpService {
             logger.error(e.getMessage());
             return Optional.empty();
         }
+    }
+
+    public void uploadFiles(ArrayList<String> fileNameList) {
+        String directoryName = LocalDateTime.now().format(DateTimeFormatter.ofPattern(DATE_FORMAT));
+        checkIfDirectoryIsAlreadyExist(directoryName)
+                .ifPresent(result -> createDirectory(directoryName));
+        fileNameList.forEach(fileName ->
+                uploadFile(directoryName, fileName)
+                        .ifPresentOrElse(
+                                result -> logger.info("Upload successfully"),
+                                () -> logger.error("Upload failed for some reasons")
+                        )
+        );
     }
 
     public void terminateConnection(){

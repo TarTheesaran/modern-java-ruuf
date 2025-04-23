@@ -78,19 +78,7 @@ public class DocumentTransactionService {
 
     private static void uploadFilesToFtp(ArrayList<String> fileNameList) {
         FtpService ftpService = new FtpService();
-
-        String directoryName = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
-        ftpService.checkIfDirectoryIsAlreadyExist(directoryName)
-                .ifPresent(result -> ftpService.createDirectory(directoryName));
-
-        fileNameList.forEach(fileName ->
-                ftpService.uploadFile(directoryName, fileName)
-                        .ifPresentOrElse(
-                                result -> logger.info("Upload successfully"),
-                                () -> logger.error("Upload failed for some reasons")
-                        )
-        );
-
+        ftpService.uploadFiles(fileNameList);
         ftpService.terminateConnection();
     }
 }
