@@ -56,7 +56,8 @@ public class UserRepository {
         return Optional.of(true);
     }
 
-    public UserComplicate getUserComplicate(Optional<UserLegacy> maybeUserLegacy) {
+    public UserComplicate getUserComplicate(String id) {
+        Optional<UserLegacy> maybeUserLegacy = getUserLegacyById(id);
         UserComplicate userComplicate;
         if (maybeUserLegacy.isPresent()) {
             UserLegacy userLegacy = maybeUserLegacy.get();

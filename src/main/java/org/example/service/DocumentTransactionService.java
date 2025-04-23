@@ -24,9 +24,8 @@ public class DocumentTransactionService {
         DocumentRepository documentRepository = new DocumentRepository();
         UserRepository userRepository = new UserRepository();
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
-        Optional<UserLegacy> maybeUserLegacy = userRepository.getUserLegacyById(USER_ID);
 
-        UserComplicate userComplicate = userRepository.getUserComplicate(maybeUserLegacy);
+        UserComplicate userComplicate = userRepository.getUserComplicate(USER_ID);
         DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
 
         userRepository.saveUserComplicate(userComplicate);
