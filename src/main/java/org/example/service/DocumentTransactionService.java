@@ -13,13 +13,16 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class DocumentTransactionService {
+    private static final String USER_ID = "complicate@sample.com";
+    private static final String USER_COMPLICATE_FILE_NAME = "user_complicate.json";
+    private static final String DOCUMENT_TRANSACTION_FILE_NAME = "document_transaction.json";
+
     private static final Logger logger = LoggerFactory.getLogger(DocumentTransactionService.class);
 
     public void uploadDocumentTransaction() {
         DocumentRepository documentRepository = new DocumentRepository();
         List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
-
-        Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
+        Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById(USER_ID);
 
         UserComplicate userComplicate = getUserComplicate(maybeUserLegacy);
         DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
@@ -29,13 +32,11 @@ public class DocumentTransactionService {
 
         Gson gson = new Gson();
         Map<String, String> sourceFileList = Map.of(
-                "user_complicate.json", gson.toJson(userComplicate),
-                "document_transaction.json", gson.toJson(documentTransactionEntity)
+                USER_COMPLICATE_FILE_NAME, gson.toJson(userComplicate),
+                DOCUMENT_TRANSACTION_FILE_NAME, gson.toJson(documentTransactionEntity)
         );
 
-        sourceFileList.forEach((fileName, jsonString) ->
-                writeFileAsJson(fileName, jsonString)
-        );
+        sourceFileList.forEach((fileName, jsonString) -> writeFileAsJson(fileName, jsonString));
 
         uploadFilesToFtp(new ArrayList<>(sourceFileList.keySet().stream().toList()));
     }
