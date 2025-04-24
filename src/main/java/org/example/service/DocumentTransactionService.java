@@ -3,6 +3,7 @@ package org.example.service;
 import com.google.gson.Gson;
 import org.example.entity.*;
 import org.example.repository.DocumentRepository;
+import org.example.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,47 +14,35 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class DocumentTransactionService {
+    private static final String USER_ID = "complicate@sample.com";
+    private static final String USER_COMPLICATE_FILE_NAME = "user_complicate.json";
+    private static final String DOCUMENT_TRANSACTION_FILE_NAME = "document_transaction.json";
+
     private static final Logger logger = LoggerFactory.getLogger(DocumentTransactionService.class);
+
     public void uploadDocumentTransaction() {
         DocumentRepository documentRepository = new DocumentRepository();
-        Optional<List<RequestCase>> cases = documentRepository.getAllRequestCase();
-        List<RequestCase> requestCases = cases.orElse(Collections.emptyList());
+        UserRepository userRepository = new UserRepository();
+        List<RequestCase> requestCases = documentRepository.getAllRequestCase().orElse(Collections.emptyList());
 
-        Optional<UserLegacy> maybeUserLegacy = documentRepository.getUserLegacyById("complicate@sample.com");
-        UserComplicate userComplicate;
-        if (maybeUserLegacy.isPresent()) {
-            UserLegacy userLegacy = maybeUserLegacy.get();
-            UserSimple userSimple = new UserSimple(
-                    userLegacy.name,
-                    userLegacy.email,
-                    userLegacy.age,
-                    userLegacy.isDeveloper);
-            userComplicate = new UserComplicate(
-                    userSimple,
-                    "f1",
-                    "f2",
-                    "f3",
-                    "f4",
-                    "f5");
+        UserComplicate userComplicate = userRepository.getUserComplicate(USER_ID);
+        DocumentTransactionEntity documentTransactionEntity = createDocumentTransaction(userComplicate, requestCases);
 
-        } else {
-            UserSimple userSimple = new UserSimple(
-                    "New",
-                    "new@customer",
-                    22,
-                    false
-            );
-            userComplicate = new UserComplicate(
-                    userSimple,
-                    "ff1",
-                    "ff2",
-                    "ff3",
-                    "ff4",
-                    "ff5");
-        }
+        userRepository.saveUserComplicate(userComplicate);
+        documentRepository.saveDocumentTransactionEntity(documentTransactionEntity);
 
-        //cases.stream().filter()
+        Gson gson = new Gson();
+        Map<String, String> sourceFileList = Map.of(
+                USER_COMPLICATE_FILE_NAME, gson.toJson(userComplicate),
+                DOCUMENT_TRANSACTION_FILE_NAME, gson.toJson(documentTransactionEntity)
+        );
 
+        sourceFileList.forEach((fileName, jsonString) -> writeFileAsJson(fileName, jsonString));
+
+        uploadFilesToFtp(new ArrayList<>(sourceFileList.keySet().stream().toList()));
+    }
+
+    private static DocumentTransactionEntity createDocumentTransaction(UserComplicate userComplicate, List<RequestCase> requestCases) {
         DocumentTransactionEntity documentTransactionEntity = new DocumentTransactionEntity();
         documentTransactionEntity.setCaseNo(userComplicate.userSimple.name + "-" + userComplicate.userSimple.email);
         documentTransactionEntity.setCreatedBy(userComplicate.userSimple.name);
@@ -75,57 +64,21 @@ public class DocumentTransactionService {
         documentTransactionEntity.setDocStatus("status1");
         documentTransactionEntity.setDocClass("CASE003");
         documentTransactionEntity.setHireeNo("hireNo");
+        return documentTransactionEntity;
+    }
 
-        Gson gson = new Gson();
-        String jsonStringOfUserComplicate = gson.toJson(userComplicate);
-        String jsonStringOfDocumentTransactionEntity = gson.toJson(documentTransactionEntity);
-
-        documentRepository.saveUserComplicate(userComplicate);
-        documentRepository.saveDocumentTransactionEntity(documentTransactionEntity);
-
-        try (FileWriter fileWriter = new FileWriter("user_complicate.json")) {
-            fileWriter.write(jsonStringOfUserComplicate);
+    private static void writeFileAsJson(String fileName, String jsonString) {
+        try (FileWriter fileWriter = new FileWriter(fileName)) {
+            fileWriter.write(jsonString);
             logger.info("JSON string has been saved to user_data.json");
         } catch (IOException e) {
             logger.error("Error writing JSON to file: " + e.getMessage());
         }
+    }
 
-        try (FileWriter fileWriter = new FileWriter("document_transaction.json")) {
-            fileWriter.write(jsonStringOfDocumentTransactionEntity);
-            logger.info("JSON string has been saved to user_data.json");
-        } catch (IOException e) {
-            logger.error("Error writing JSON to file: " + e.getMessage());
-        }
-
-        ArrayList<String> sourceFileList = new ArrayList<>();
-        sourceFileList.add("user_complicate.json");
-        sourceFileList.add("document_transaction.json");
-
-        FtpService ftpService = new FtpService("localhost",
-                2121,
-                "one",
-                "1234");
-
-        // Specify the file to upload
-        String localFile = "user_data.json"; // Path to local file
-        LocalDateTime currentDateTime = LocalDateTime.now();
-        // Define the formatter with the desired pattern
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
-
-        // Format the date-time into the desired string format
-        String directoryName = currentDateTime.format(formatter);
-        Optional<Boolean> directoryNotExist = ftpService.checkIfDirectoryIsAlreadyExist(directoryName);
-        directoryNotExist.ifPresent(
-                result -> ftpService.createDirectory(directoryName)
-        );
-        sourceFileList.forEach(fileName ->
-                ftpService.uploadFile(directoryName, fileName)
-                        .ifPresentOrElse(
-                                result -> logger.info("Upload successfully"),
-                                () -> logger.error("Upload failed for some reasons")
-                        )
-        );
-
+    private static void uploadFilesToFtp(ArrayList<String> fileNameList) {
+        FtpService ftpService = new FtpService();
+        ftpService.uploadFiles(fileNameList);
         ftpService.terminateConnection();
     }
 }
